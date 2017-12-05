@@ -1,5 +1,5 @@
-var PCS_ASSIST_SERVER_HOST = "http://pcschair.org";
-var PCS_VENUE_ID = 1;
+var PCS_ASSIST_SERVER_HOST = "http://www.pcschair.org";
+var PCS_VENUE_ID = 0;
 
 var TIMER_VALUE = 5;
 var PCS_USER_REF = null;
@@ -32,11 +32,11 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 	}
 	else if (message.type == "open-pcs-page") {
 		if (PCS_USER_REF != null) {
-			chrome.tabs.query({url: 'https://precisionconference.com/*'}, function(results) {
+			chrome.tabs.query({url: 'https://confs.precisionconference.com/*'}, function(results) {
 				if (results.length > 0) {
-					chrome.tabs.create({'windowId': results[0].windowId, 'index': results[0].index+1, 'url': "https://precisionconference.com/~chi17pn/adminOnePaper?userRef=" + PCS_USER_REF + "&paperNumber=" + message.paperId + "&noHomeButton=true&noLogoutButton=true&closeWindowButton=true&anonView=true"});
+					chrome.tabs.create({'windowId': results[0].windowId, 'index': results[0].index+1, 'url': "https://confs.precisionconference.com/~chi17pn/adminOnePaper?userRef=" + PCS_USER_REF + "&paperNumber=" + message.paperId + "&noHomeButton=true&noLogoutButton=true&closeWindowButton=true&anonView=true"});
 				} else {
-					chrome.tabs.create({'url': "https://precisionconference.com/~chi17pn/adminOnePaper?userRef=" + PCS_USER_REF + "&paperNumber=" + message.paperId + "&noHomeButton=true&noLogoutButton=true&closeWindowButton=true&anonView=true"});
+					chrome.tabs.create({'url': "https://confs.precisionconference.com/~chi17pn/adminOnePaper?userRef=" + PCS_USER_REF + "&paperNumber=" + message.paperId + "&noHomeButton=true&noLogoutButton=true&closeWindowButton=true&anonView=true"});
 				}
 			});
 		}
