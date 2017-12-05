@@ -1,5 +1,5 @@
 var PCS_ASSIST_SERVER_HOST = "http://www.pcschair.org";
-var PCS_VENUE_ID = 0;
+var PCS_VENUE_ID = 2;
 
 var TIMER_VALUE = 5;
 var PCS_USER_REF = null;
