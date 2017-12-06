@@ -25,7 +25,7 @@ function PCSCHAIRclearActivePaper(closeFlag) {
 }
 
 $(function() {
-	if (window.location.host == "precisionconference.com") {
+	if (window.location.host == "confs.precisionconference.com") {
 		var pcsUserRef = $.urlParam("userRef");
 		if (pcsUserRef != null) {
 			chrome.runtime.sendMessage({type: "set-pcs-user-ref", pcsUserRef: pcsUserRef }, function() {
@@ -78,7 +78,7 @@ $(function() {
 		})
 		*/		
 	}
-	else if (window.location.host == "pcschair.org" && window.location.pathname.indexOf("admin") > 0) {
+	else if (window.location.host == "www.pcschair.org" && window.location.pathname.indexOf("admin") > 0) {
 		var updateFunc = function() {
 			var increment = parseInt($("#timerNum").val());
 			if (Number.isInteger(increment)) {
