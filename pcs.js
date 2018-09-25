@@ -78,6 +78,50 @@ $(function() {
 		})
 		*/		
 	}
+	else if (window.location.host == "new.precisionconference.com" && window.location.pathname.indexOf("chair/subs/") >= 0) {
+
+		var paperId = window.location.pathname.match(/\/(\d+)$/)[1];
+		var title = $("span.h1SubTitle").text();
+		var authors = "";
+		
+		var authorRows = $("table.authorList > tbody > tr");
+		for(var i = 0; i < authorRows.length; i++) {
+			if (i > 0) authors += "\n";
+			
+			var name = $($(authorRows[i]).children("td")[0]).text();
+			var affiliation = $($(authorRows[i]).children("td")[1]).text();
+			authors += name + " - " + affiliation;
+		}
+		
+		alert("PCS2 ID: " + paperId + "\nTitle: " + title + "\n" + authors);
+		var sendData = {
+			"paper_title" : title,
+		    "paper_authors" : authors,
+		    "paper_pcs_id" : paperId,
+			"active_paper" : true
+		}
+
+		if (AUTOSET_TIMER_FLAG) {
+			var newTime = new Date((new Date()).getTime() + AUTOSET_TIMER_INTERVAL*60*1000);
+			sendData.timer = newTime.toUTCString();
+		}
+		
+		chrome.runtime.sendMessage({type: "update", sendData: sendData }, function() {
+		    // active paper data updated
+		});
+		
+		/*
+		 * Removing automatic unload
+		
+		$($("a.rollover")[0])
+			.attr("href",'')
+			.click(function() { PCSCHAIRclearActivePaper(true); });
+			
+		$(window).on("beforeunload",function() {
+			PCSCHAIRclearActivePaper(false);
+		})
+		*/		
+	}
 	else if (window.location.host == "www.pcschair.org" && window.location.pathname.indexOf("admin") > 0) {
 		var updateFunc = function() {
 			var increment = parseInt($("#timerNum").val());
