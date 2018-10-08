@@ -26,6 +26,9 @@ function PCSCHAIRclearActivePaper(closeFlag) {
 
 $(function() {
 	if (window.location.host == "confs.precisionconference.com") {
+		chrome.runtime.sendMessage({type: "set-pcs2-info", pcs2Flag: false }, function() {
+			// pcs2 flag updated
+		});
 		var pcsUserRef = $.urlParam("userRef");
 		if (pcsUserRef != null) {
 			chrome.runtime.sendMessage({type: "set-pcs-user-ref", pcsUserRef: pcsUserRef }, function() {
@@ -79,7 +82,6 @@ $(function() {
 		*/		
 	}
 	else if (window.location.host == "new.precisionconference.com" && window.location.pathname.indexOf("chair/subs/") >= 0) {
-
 		var paperId = window.location.pathname.match(/\/(\d+)$/)[1];
 		var title = $("span.h1SubTitle").text();
 		var authors = "";
@@ -93,7 +95,7 @@ $(function() {
 			authors += name + " - " + affiliation;
 		}
 		
-		alert("PCS2 ID: " + paperId + "\nTitle: " + title + "\n" + authors);
+		// alert("PCS2 ID: " + paperId + "\nTitle: " + title + "\n" + authors);
 		var sendData = {
 			"paper_title" : title,
 		    "paper_authors" : authors,
@@ -122,25 +124,51 @@ $(function() {
 		})
 		*/		
 	}
-	else if (window.location.host == "www.pcschair.org" && window.location.pathname.indexOf("admin") > 0) {
-		var updateFunc = function() {
-			var increment = parseInt($("#timerNum").val());
-			if (Number.isInteger(increment)) {
-				chrome.runtime.sendMessage({type: "timer", timerValue: increment}, function() {
-					// timer value updated
+	else if ((window.location.host == "www.pcschair.org" || (window.location.host.indexOf("localhost") == 0)) && window.location.pathname.indexOf("admin") > 0) {
+
+		$("#link-status").text("Installed");
+		$("#setExtensionIdButton").removeClass("invisible");
+		$("#setExtensionIdButton").click(function(event) {
+			var venueMatch = window.location.pathname.match(/venues\/(\d+)\//);
+			if (venueMatch) {
+				var venueID = parseInt(venueMatch[1]);
+				var pcs2Flag = $("#pcs2flag").text() == "true";
+				var pcs2VenueName = $("#pcs2venueName").text();
+				chrome.runtime.sendMessage({type: "link-extension", 
+				                            hostname: window.location.host,
+				                            "venueID" : venueID,
+				                            "pcs2Flag": pcs2Flag, 
+				                            "pcs2VenueName": pcs2VenueName}, function(data) {
+					// could handle this better
+					window.location.reload();
 				})
 			}
-		}
-		
-		$("#timerNum").change(updateFunc);
-		updateFunc();
-		
-		$("#paper-queue").click(function(event) {
-			if ($(event.target).hasClass("paperLink")) {
-				var paperId = $(event.target).text();
-				chrome.runtime.sendMessage({type: "open-pcs-page", paperId: paperId}, function(response) {
-				    // hopefully the page opened
-				});
+		});
+
+		chrome.runtime.sendMessage({type: "check-link-status"}, function(data) {
+			if (data.linked) {
+				$("#link-status").text("Linked");
+				
+				var updateFunc = function() {
+					var increment = parseInt($("#timerNum").val());
+					if (Number.isInteger(increment)) {
+						chrome.runtime.sendMessage({type: "timer", timerValue: increment}, function() {
+							// timer value updated
+						})
+					}
+				}
+
+				$("#timerNum").change(updateFunc);
+				updateFunc();
+
+				$("#paper-queue").click(function(event) {
+					if ($(event.target).hasClass("paperLink")) {
+						var paperId = $(event.target).text();
+						chrome.runtime.sendMessage({type: "open-pcs-page", paperId: paperId}, function(response) {
+						    // hopefully the page opened
+						});
+					}
+				})
 			}
 		})
 	}
