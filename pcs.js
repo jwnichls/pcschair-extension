@@ -81,7 +81,7 @@ $(function() {
 		})
 		*/		
 	}
-	else if (window.location.host == "new.precisionconference.com" && window.location.pathname.indexOf("chair/subs/") >= 0) {
+	else if (window.location.host == "new.precisionconference.com" && window.location.pathname.match(/chair\d*\/sub/) != null) {
 		var paperId = window.location.pathname.match(/\/(\d+)$/)[1];
 		var title = $("span.h1SubTitle").text();
 		var authors = "";
