@@ -81,7 +81,7 @@ $(function() {
 		})
 		*/		
 	}
-	else if (window.location.host == "new.precisionconference.com" && window.location.pathname.match(/chair\d*\/sub/) != null) {
+	else if (window.location.host == "new.precisionconference.com" && window.location.pathname.match(/chair\d*\/subs/) != null) {
 		var paperId = window.location.pathname.match(/\/(\d+)$/)[1];
 		var title = $("span.h1SubTitle").text();
 		var authors = "";
@@ -95,34 +95,25 @@ $(function() {
 			authors += name + " - " + affiliation;
 		}
 		
-		// alert("PCS2 ID: " + paperId + "\nTitle: " + title + "\n" + authors);
-		var sendData = {
-			"paper_title" : title,
-		    "paper_authors" : authors,
-		    "paper_pcs_id" : paperId,
-			"active_paper" : true
-		}
+		// Only send paper data if we got everything that we need (e.g., not if on an error page)
+		if (title != null && title != "" && authors != "") {
+			// alert("PCS2 ID: " + paperId + "\nTitle: " + title + "\n" + authors);
+			var sendData = {
+				"paper_title" : title,
+			    "paper_authors" : authors,
+			    "paper_pcs_id" : paperId,
+				"active_paper" : true
+			}
 
-		if (AUTOSET_TIMER_FLAG) {
-			var newTime = new Date((new Date()).getTime() + AUTOSET_TIMER_INTERVAL*60*1000);
-			sendData.timer = newTime.toUTCString();
+			if (AUTOSET_TIMER_FLAG) {
+				var newTime = new Date((new Date()).getTime() + AUTOSET_TIMER_INTERVAL*60*1000);
+				sendData.timer = newTime.toUTCString();
+			}
+
+			chrome.runtime.sendMessage({type: "update", sendData: sendData }, function() {
+			    // active paper data updated
+			});
 		}
-		
-		chrome.runtime.sendMessage({type: "update", sendData: sendData }, function() {
-		    // active paper data updated
-		});
-		
-		/*
-		 * Removing automatic unload
-		
-		$($("a.rollover")[0])
-			.attr("href",'')
-			.click(function() { PCSCHAIRclearActivePaper(true); });
-			
-		$(window).on("beforeunload",function() {
-			PCSCHAIRclearActivePaper(false);
-		})
-		*/		
 	}
 	else if ((window.location.host == "www.pcschair.org" || (window.location.host.indexOf("localhost") == 0)) && window.location.pathname.indexOf("admin") > 0) {
 
@@ -132,14 +123,10 @@ $(function() {
 			var venueMatch = window.location.pathname.match(/venues\/(\d+)\//);
 			if (venueMatch) {
 				var venueID = parseInt(venueMatch[1]);
-				var pcs2Flag = $("#pcs2flag").text() == "true";
-				var pcs2VenueName = $("#pcs2venueName").text();
 				chrome.runtime.sendMessage({type: "link-extension", 
 				                            hostname: window.location.host,
-				                            "venueID" : venueID,
-				                            "pcs2Flag": pcs2Flag, 
-				                            "pcs2VenueName": pcs2VenueName}, function(data) {
-					// could handle this better
+				                            "venueID" : venueID}, function(data) {
+					// TODO(JWN): could handle this better
 					window.location.reload();
 				})
 			}

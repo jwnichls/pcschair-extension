@@ -3,6 +3,7 @@ var TIMER_VALUE = 5;
 var EXTENSION_LINKED = false;
 var PCS_ASSIST_SERVER_HOST = "http://www.pcschair.org";
 var PCS_VENUE_ID = 1;
+var PCS_SUB_COMMITTEE_FLAG = false;
 var PCS2_FLAG = true;
 var PCS2_VENUE_NAME = "eics_pacmb";
 
@@ -39,11 +40,26 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 	else if (message.type == "link-extension") {
 		PCS_ASSIST_SERVER_HOST = message.hostname;
 		PCS_VENUE_ID = message.venueID;
-		PCS2_FLAG = message.pcs2Flag;
-		PCS2_VENUE_NAME = message.pcs2VenueName;
 		EXTENSION_LINKED = message.hostname != null && message.hostname != "" && message.venueID != null && message.venueID != "";
-		
-		callback({linked: EXTENSION_LINKED});
+
+		if (EXTENSION_LINKED) {
+			$.ajax({
+			        type: "GET",
+			        url: "http://" + PCS_ASSIST_SERVER_HOST + "/venues/" + PCS_VENUE_ID + ".json",
+			        dataType: "json",
+					error: function() { 
+						EXTENSION_LINKED = false;
+						callback({linked: EXTENSION_LINKED}); 
+					},
+					success: function(data) {
+						PCS2_FLAG = data.pcs2_flag;
+						PCS2_VENUE_NAME = data.pcs2_venue_name;
+						PCS_SUB_COMMITTEE_FLAG = data.sub_committee;
+
+						callback({linked: EXTENSION_LINKED});
+					}
+			});
+		}
 	}
 	else if (message.type == "check-link-status") {
 		callback({linked: EXTENSION_LINKED});
