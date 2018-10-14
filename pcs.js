@@ -148,6 +148,7 @@ $(function() {
 				$("#timerNum").change(updateFunc);
 				updateFunc();
 
+				// Only needed to support original PCS
 				$("#paper-queue").click(function(event) {
 					if ($(event.target).hasClass("paperLink")) {
 						var paperId = $(event.target).text();
