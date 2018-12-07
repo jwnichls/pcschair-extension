@@ -120,9 +120,9 @@ $(function() {
 		$("#link-status").text("Installed");
 		$("#setExtensionIdButton").removeClass("invisible");
 		$("#setExtensionIdButton").click(function(event) {
-			var venueMatch = window.location.pathname.match(/venues\/(\d+)\//);
+			var venueMatch = window.location.pathname.match(/venues\/([^\/]+)\//);
 			if (venueMatch) {
-				var venueID = parseInt(venueMatch[1]);
+				var venueID = venueMatch[1];
 				chrome.runtime.sendMessage({type: "link-extension", 
 				                            hostname: window.location.host,
 				                            "venueID" : venueID}, function(data) {
@@ -148,6 +148,7 @@ $(function() {
 				$("#timerNum").change(updateFunc);
 				updateFunc();
 
+				// Only needed to support original PCS
 				$("#paper-queue").click(function(event) {
 					if ($(event.target).hasClass("paperLink")) {
 						var paperId = $(event.target).text();
