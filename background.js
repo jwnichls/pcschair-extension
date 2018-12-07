@@ -2,7 +2,7 @@ var TIMER_VALUE = 5;
 
 var EXTENSION_LINKED = false;
 var PCS_ASSIST_SERVER_HOST = "http://www.pcschair.org";
-var PCS_VENUE_ID = 1;
+var PCS_VENUE_ID = "1";
 var PCS_SUB_COMMITTEE_FLAG = false;
 var PCS2_FLAG = true;
 var PCS2_VENUE_NAME = "eics_pacmb";
