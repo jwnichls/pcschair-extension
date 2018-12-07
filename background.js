@@ -85,25 +85,14 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 		callback({linked: STATE.EXTENSION_LINKED});
 	}
 	else if (message.type == "open-pcs-page") {
-		if (STATE.EXTENSION_LINKED) {
-			if (STATE.PCS2_FLAG) {
-				chrome.tabs.query({url: 'https://new.precisionconference.com/*'}, function(results) {
-					if (results.length > 0) {
-						chrome.tabs.create({'windowId': results[0].windowId, 'index': results[0].index+1, 'url': "https://new.precisionconference.com/" + STATE.PCS2_VENUE_NAME + "/chair/subs/" + message.paperId});
-					} else {
-						chrome.tabs.create({'url': "https://new.precisionconference.com/" + STATE.PCS2_VENUE_NAME + "/chair/subs/" + message.paperId});
-					}
-				});
-			}
-			else if (STATE.PCS_USER_REF != null) {
-				chrome.tabs.query({url: 'https://confs.precisionconference.com/*'}, function(results) {
-					if (results.length > 0) {
-						chrome.tabs.create({'windowId': results[0].windowId, 'index': results[0].index+1, 'url': "https://confs.precisionconference.com/~chi18a/adminOnePaper?userRef=" + STATE.PCS_USER_REF + "&paperNumber=" + message.paperId + "&noHomeButton=true&noLogoutButton=true&closeWindowButton=true&anonView=true"});
-					} else {
-						chrome.tabs.create({'url': "https://confs.precisionconference.com/~chi18a/adminOnePaper?userRef=" + STATE.PCS_USER_REF + "&paperNumber=" + message.paperId + "&noHomeButton=true&noLogoutButton=true&closeWindowButton=true&anonView=true"});
-					}
-				});
-			}
+		if (STATE.EXTENSION_LINKED && !STATE.PCS2_FLAG && STATE.PCS_USER_REF != null) {
+			chrome.tabs.query({url: 'https://confs.precisionconference.com/*'}, function(results) {
+				if (results.length > 0) {
+					chrome.tabs.create({'windowId': results[0].windowId, 'index': results[0].index+1, 'url': "https://confs.precisionconference.com/~chi18a/adminOnePaper?userRef=" + STATE.PCS_USER_REF + "&paperNumber=" + message.paperId + "&noHomeButton=true&noLogoutButton=true&closeWindowButton=true&anonView=true"});
+				} else {
+					chrome.tabs.create({'url': "https://confs.precisionconference.com/~chi18a/adminOnePaper?userRef=" + STATE.PCS_USER_REF + "&paperNumber=" + message.paperId + "&noHomeButton=true&noLogoutButton=true&closeWindowButton=true&anonView=true"});
+				}
+			});
 		}
 	}
 });
