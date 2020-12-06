@@ -39,7 +39,7 @@ $(function() {
 	
 	if (window.location.pathname.indexOf("adminOnePaper") >= 0) {
 
-		var paperId = $.urlParam("paperNumber");
+		var paperId = $.urlParam("paperNumber").parseInt();
 		var title = $("h1 font").text();
 		var authors = "";
 		
@@ -64,10 +64,12 @@ $(function() {
 			var newTime = new Date((new Date()).getTime() + AUTOSET_TIMER_INTERVAL*60*1000);
 			sendData.timer = newTime.toUTCString();
 		}
-		
-		chrome.runtime.sendMessage({type: "update", sendData: sendData }, function() {
-		    // active paper data updated
-		});
+
+		if (!pcsVenueInfo || pcsVenueInfo.paper_pcs_id != paperId ) {
+			chrome.runtime.sendMessage({type: "update", sendData: sendData }, function() {
+			    // active paper data updated
+			});
+		}
 		
 		/*
 		 * Removing automatic unload
@@ -86,12 +88,12 @@ $(function() {
 		var title = $("span.h1SubTitle").text();
 		var authors = "";
 		
-		var authorRows = $("table.authorList > tbody > tr");
+		var authorRows = $("ul.authorList > li");
 		for(var i = 0; i < authorRows.length; i++) {
 			if (i > 0) authors += "\n";
 			
-			var name = $($(authorRows[i]).children("td")[0]).text();
-			var affiliation = $($(authorRows[i]).children("td")[1]).text();
+			var name = $($(authorRows[i]).children("span")[0]).text();
+			var affiliation = $($(authorRows[i]).children("span")[1]).text();
 			authors += name + " - " + affiliation;
 		}
 		
@@ -111,7 +113,7 @@ $(function() {
 			}
 
 			chrome.runtime.sendMessage({type: "update", sendData: sendData }, function() {
-			    // active paper data updated
+				// active paper data updated
 			});
 		}
 	}
