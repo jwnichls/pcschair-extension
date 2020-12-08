@@ -1,6 +1,7 @@
 var STATE = {
 	TIMER_VALUE: 5,
 	EXTENSION_LINKED: false,
+	AUTO_UPDATE_PAPER: true,
 	PCS_ASSIST_SERVER_HOST: "http://www.pcschair.org",
 	PCS_VENUE_ID: "1",
 	PCS_SUB_COMMITTEE_FLAG: false,
@@ -42,9 +43,29 @@ function updateVenueWithData(sendData, callback) {
 	}
 }
 
+function addPaperToQueue(paperId, callback) {
+	if (STATE.EXTENSION_LINKED) {
+		var sendData = { 
+				pcs_id : paperId
+			};
+
+		$.ajax({
+		           type: "POST",
+		           url: "http://" + STATE.PCS_ASSIST_SERVER_HOST + "/venues/" + STATE.PCS_VENUE_ID + "/addpaper",
+		           dataType: "json",
+		           success: callback,
+		           data: sendData
+		       });
+
+	}
+}
+
 chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 	if (message.type == "update") {
 		updateVenueWithData(message.sendData,callback);
+	}
+	else if (message.type == "add-paper-to-queue") {
+		addPaperToQueue(message.paperId,callback);
 	}
 	else if (message.type == "timer") {
 		STATE.TIMER_VALUE = message.timerValue;
@@ -83,6 +104,15 @@ chrome.runtime.onMessage.addListener(function(message, sender, callback) {
 		if (STATE.EXTENSION_LINKED == undefined)
 			STATE.EXTENSION_LINKED = false;
 		callback({linked: STATE.EXTENSION_LINKED});
+	}
+	else if (message.type == "set-auto-update-state") {
+		STATE.AUTO_UPDATE_PAPER = message.updating;
+		saveState();
+	}
+	else if (message.type == "check-auto-update-state") {
+		if (STATE.AUTO_UPDATE_PAPER == undefined)
+			STATE.AUTO_UPDATE_PAPER = false;
+		callback({updating: STATE.AUTO_UPDATE_PAPER});
 	}
 	else if (message.type == "open-pcs-page") {
 		if (STATE.EXTENSION_LINKED && !STATE.PCS2_FLAG && STATE.PCS_USER_REF != null) {

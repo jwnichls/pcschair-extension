@@ -24,6 +24,24 @@ function PCSCHAIRclearActivePaper(closeFlag) {
 	});	
 }
 
+function PCSCHAIRsendPaperData(title, authors, paperId) {
+	var sendData = {
+		"paper_title" : title,
+	    "paper_authors" : authors,
+	    "paper_pcs_id" : paperId,
+		"active_paper" : true
+	}
+
+	if (AUTOSET_TIMER_FLAG) {
+		var newTime = new Date((new Date()).getTime() + AUTOSET_TIMER_INTERVAL*60*1000);
+		sendData.timer = newTime.toUTCString();
+	}
+
+	chrome.runtime.sendMessage({type: "update", sendData: sendData }, function() {
+		// active paper data updated
+	});
+}
+
 $(function() {
 	if (window.location.host == "confs.precisionconference.com") {
 		chrome.runtime.sendMessage({type: "set-pcs2-info", pcs2Flag: false }, function() {
@@ -100,22 +118,57 @@ $(function() {
 		// Only send paper data if we got everything that we need (e.g., not if on an error page)
 		if (title != null && title != "" && authors != "") {
 			// alert("PCS2 ID: " + paperId + "\nTitle: " + title + "\n" + authors);
-			var sendData = {
-				"paper_title" : title,
-			    "paper_authors" : authors,
-			    "paper_pcs_id" : paperId,
-				"active_paper" : true
-			}
 
-			if (AUTOSET_TIMER_FLAG) {
-				var newTime = new Date((new Date()).getTime() + AUTOSET_TIMER_INTERVAL*60*1000);
-				sendData.timer = newTime.toUTCString();
-			}
+			chrome.runtime.sendMessage({type: "check-auto-update-state"}, function(data) {
+				if (data.updating) {
+					// Send the update automatically
+					PCSCHAIRsendPaperData(title, authors, paperId)
+				} else {
+					// Create a button to send the update
+					var buttonDiv = $(document.createElement("div")).html(
+						'<span>pcschair.org Buttons: </span>' +
+						'<button id="PCSCHAIRmakeactive">Make This Paper Active</button> ' +
+						'<button id="PCSCHAIRclearactive">Clear Active Paper</button>');
+					$("main").prepend(buttonDiv);
 
-			chrome.runtime.sendMessage({type: "update", sendData: sendData }, function() {
-				// active paper data updated
-			});
+					$("#PCSCHAIRmakeactive").click(function(e) {
+						PCSCHAIRsendPaperData(title, authors, paperId);
+					});
+
+					$("#PCSCHAIRclearactive").click(function(e) {
+						PCSCHAIRclearActivePaper(false);
+					});
+				}
+			})
 		}
+	}
+	else if (window.location.host == "new.precisionconference.com" && window.location.pathname.match(/submissions$/) != null) {
+		// on submissions page
+		var waitForTable = function() {
+			var dataRows = $('tbody tr');
+			if (dataRows.length > 0 && $('tbody').prop('offsetParent') != null) {
+				$('thead tr').prepend($(document.createElement('th')).addClass('dt-left').text('pcschair.org'))
+
+				// ready to add buttons
+				dataRows.each(function(index, row) {
+					var paperId = parseInt(row.children[1].textContent);
+					if (!isNaN(paperId)) {
+						$(row).prepend($(document.createElement('td')).
+							addClass('dt-left').
+							html('<button id="add' + paperId + '">Add</button>'))
+						$("#add" + paperId).click(function(e) {
+							chrome.runtime.sendMessage({type: "add-paper-to-queue", paperId: paperId}, function(data) {
+								// paper should be added
+							})
+						});
+					}
+				})
+			} else {
+				setTimeout(waitForTable, 1000);
+			}
+		}
+
+		setTimeout(waitForTable, 1000);
 	}
 	else if ((window.location.host == "www.pcschair.org" || (window.location.host.indexOf("localhost") == 0)) && window.location.pathname.indexOf("admin") > 0) {
 
@@ -133,6 +186,16 @@ $(function() {
 				})
 			}
 		});
+
+		$("#autoUpdatePapers").change(function(e) {
+			chrome.runtime.sendMessage({type: "set-auto-update-state", updating: $("#autoUpdatePapers").prop('checked')}, function() {
+			    // auto-update updated
+			});
+		})
+
+		chrome.runtime.sendMessage({type: "check-auto-update-state"}, function(data) {
+			$("#autoUpdatePapers").prop('checked', data.updating);
+		})
 
 		chrome.runtime.sendMessage({type: "check-link-status"}, function(data) {
 			if (data.linked) {
