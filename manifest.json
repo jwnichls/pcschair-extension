@@ -3,7 +3,7 @@
 
   "name": "PCS Chairing Assistant",
   "description": "This extension assists with the use of PCS for chairing program committee meetings",
-  "version": "1.7",
+  "version": "1.7.1",
 
   "content_scripts": [
 	{

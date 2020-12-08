@@ -147,22 +147,49 @@ $(function() {
 		var waitForTable = function() {
 			var dataRows = $('tbody tr');
 			if (dataRows.length > 0 && $('tbody').prop('offsetParent') != null) {
-				$('thead tr').prepend($(document.createElement('th')).addClass('dt-left').text('pcschair.org'))
-
-				// ready to add buttons
-				dataRows.each(function(index, row) {
-					var paperId = parseInt(row.children[1].textContent);
-					if (!isNaN(paperId)) {
-						$(row).prepend($(document.createElement('td')).
-							addClass('dt-left').
-							html('<button id="add' + paperId + '">Add</button>'))
-						$("#add" + paperId).click(function(e) {
-							chrome.runtime.sendMessage({type: "add-paper-to-queue", paperId: paperId}, function(data) {
-								// paper should be added
-							})
-						});
+				var dataHeaders = $('thead th');
+				var idIndex = -1;
+				for (let idx = 0; idx < dataHeaders.length; idx++) {
+					if ($(dataHeaders[idx]).text() == "ID") {
+						idIndex = idx;
+						break;
 					}
-				})
+				}
+				
+				if (idIndex >= 0) {
+					// ready to add buttons
+					var buttonsAdded = 0;
+				
+					dataRows.each(function(index, row) {
+						var paperId = parseInt(row.children[idIndex].textContent);
+						if (!isNaN(paperId)) {
+							buttonsAdded ++;
+							$(row).prepend($(document.createElement('td')).
+								addClass('dt-left').
+								html('<button id="add' + paperId + '">Add</button>'))
+							$("#add" + paperId).click(function(e) {
+								chrome.runtime.sendMessage({type: "add-paper-to-queue", paperId: paperId}, function(data) {
+									// paper should be added
+								})
+							});
+						}
+					})
+
+					if (buttonsAdded > 0) {
+						$('thead tr').prepend($(document.createElement('th')).addClass('dt-left').text('pcschair'));
+						
+						// register a mutation observer to ensure the header is re-added if columns are reconfigured
+						const config = { childList: true, subtree: true };
+						const headNode = $('thead')[0];
+						const callback = function(mutationsList, observer) {
+							observer.disconnect();
+							$('thead tr').prepend($(document.createElement('th')).addClass('dt-left').text('pcschair'));
+							observer.observe(headNode, config);
+						}
+						const observer = new MutationObserver(callback);
+						observer.observe(headNode, config);
+					}
+				}
 			} else {
 				setTimeout(waitForTable, 1000);
 			}
