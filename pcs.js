@@ -21,7 +21,7 @@ function PCSCHAIRclearActivePaper(closeFlag) {
 
 	chrome.runtime.sendMessage({type: "update", sendData: sendData }, function() {
 		if (closeFlag) window.close();
-	});	
+	});
 }
 
 function PCSCHAIRsendPaperData(title, authors, paperId) {
@@ -54,22 +54,22 @@ $(function() {
 			});
 		}
 	}
-	
+
 	if (window.location.pathname.indexOf("adminOnePaper") >= 0) {
 
 		var paperId = $.urlParam("paperNumber").parseInt();
 		var title = $("h1 font").text();
 		var authors = "";
-		
+
 		var authorRows = $("h3 font table tbody tr");
 		for(var i = 0; i < authorRows.length; i++) {
 			if (i > 0) authors += "\n";
-			
+
 			var name = $($(authorRows[i]).children("td")[0]).text();
 			var affiliation = $($(authorRows[i]).children("td")[2]).text();
 			authors += name + " - " + affiliation;
 		}
-		
+
 		// alert("ID: " + paperId + "\nTitle: " + title + "\n" + authors);
 		var sendData = {
 			"paper_title" : title,
@@ -88,57 +88,68 @@ $(function() {
 			    // active paper data updated
 			});
 		}
-		
+
 		/*
 		 * Removing automatic unload
-		
+
 		$($("a.rollover")[0])
 			.attr("href",'')
 			.click(function() { PCSCHAIRclearActivePaper(true); });
-			
+
 		$(window).on("beforeunload",function() {
 			PCSCHAIRclearActivePaper(false);
 		})
-		*/		
+		*/
 	}
 	else if (window.location.host == "new.precisionconference.com" && window.location.pathname.match(/chair\d*\/subs/) != null) {
 		var paperId = window.location.pathname.match(/\/(\d+)$/)[1];
 		var title = $("span.h1SubTitle").text();
 		var authors = "";
-		
+
 		var authorRows = $("ul.authorList > li");
 		for(var i = 0; i < authorRows.length; i++) {
 			if (i > 0) authors += "\n";
-			
+
 			var name = $($(authorRows[i]).children("span")[0]).text();
 			var affiliation = $($(authorRows[i]).children("span")[1]).text();
 			authors += name + " - " + affiliation;
 		}
-		
+
 		// Only send paper data if we got everything that we need (e.g., not if on an error page)
 		if (title != null && title != "" && authors != "") {
 			// alert("PCS2 ID: " + paperId + "\nTitle: " + title + "\n" + authors);
 
 			chrome.runtime.sendMessage({type: "check-auto-update-state"}, function(data) {
+				var buttonDiv = $(document.createElement("div")).html(
+					'<span>pcschair.org Buttons: </span>' +
+					'<button id="PCSCHAIRresettimer">Reset Timer</button> ');
+
 				if (data.updating) {
 					// Send the update automatically
 					PCSCHAIRsendPaperData(title, authors, paperId)
 				} else {
-					// Create a button to send the update
-					var buttonDiv = $(document.createElement("div")).html(
-						'<span>pcschair.org Buttons: </span>' +
+					// Create a buttons to manually update
+					buttonDiv.append(
 						'<button id="PCSCHAIRmakeactive">Make This Paper Active</button> ' +
 						'<button id="PCSCHAIRclearactive">Clear Active Paper</button>');
-					$("main").prepend(buttonDiv);
 
-					$("#PCSCHAIRmakeactive").click(function(e) {
-						PCSCHAIRsendPaperData(title, authors, paperId);
-					});
-
-					$("#PCSCHAIRclearactive").click(function(e) {
-						PCSCHAIRclearActivePaper(false);
-					});
 				}
+
+				$("main").prepend(buttonDiv);
+
+				$("#PCSCHAIRmakeactive").click(function(e) {
+					PCSCHAIRsendPaperData(title, authors, paperId);
+				});
+
+				$("#PCSCHAIRresettimer").click(function(e) {
+					chrome.runtime.sendMessage({type: "update", sendData: {timer: true}}, function() {
+						// nothing to do
+					});
+				});
+
+				$("#PCSCHAIRclearactive").click(function(e) {
+					PCSCHAIRclearActivePaper(false);
+				});
 			})
 		}
 	}
@@ -155,11 +166,11 @@ $(function() {
 						break;
 					}
 				}
-				
+
 				if (idIndex >= 0) {
 					// ready to add buttons
 					var buttonsAdded = 0;
-				
+
 					dataRows.each(function(index, row) {
 						var paperId = parseInt(row.children[idIndex].textContent);
 						if (!isNaN(paperId)) {
@@ -177,7 +188,7 @@ $(function() {
 
 					if (buttonsAdded > 0) {
 						$('thead tr').prepend($(document.createElement('th')).addClass('dt-left').text('pcschair'));
-						
+
 						// register a mutation observer to ensure the header is re-added if columns are reconfigured
 						const config = { childList: true, subtree: true };
 						const headNode = $('thead')[0];
@@ -205,7 +216,7 @@ $(function() {
 			var venueMatch = window.location.pathname.match(/venues\/([^\/]+)\//);
 			if (venueMatch) {
 				var venueID = venueMatch[1];
-				chrome.runtime.sendMessage({type: "link-extension", 
+				chrome.runtime.sendMessage({type: "link-extension",
 				                            hostname: window.location.host,
 				                            "venueID" : venueID}, function(data) {
 					// TODO(JWN): could handle this better
@@ -227,7 +238,7 @@ $(function() {
 		chrome.runtime.sendMessage({type: "check-link-status"}, function(data) {
 			if (data.linked) {
 				$("#link-status").text("Linked");
-				
+
 				var updateFunc = function() {
 					var increment = parseInt($("#timerNum").val());
 					if (Number.isInteger(increment)) {
